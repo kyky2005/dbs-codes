@@ -29,7 +29,33 @@ if (isset($_POST['add_browser'])) {
     $borrower_create_message = 'Borrower Created succesfuly';
   } catch (PDOException $e) {
     $borrower_create_status = 'unsuccessful';
-    $borrower_create_message = "Borrower couldnt create";
+    $borrower_create_message = $e->getMessage();
+  }
+
+
+}
+
+if (isset($_POST['add_address'])) {
+
+  try {
+    
+    $borrower_id = $_POST['borrower_id'];
+    $borrower_house_number = $_POST['ba_house_number'];
+    $borrower_street = $_POST['ba_street'];
+    $borrower_barangay = $_POST['ba_barangay'];
+    $borrower_city = $_POST['ba_city'];
+    $borrower_province = $_POST['ba_province'];
+    $borrower_postal_code = $_POST['ba_postal_code'];
+    $is_primary = $_POST['is_primary'];
+
+    $con->insertBorrowerAddress($borrower_id, $borrower_house_number, $borrower_street, $borrower_barangay, $borrower_city, $borrower_province, $borrower_postal_code, $is_primary);
+
+    $borrower_create_status = 'success';
+    $borrower_create_message = 'Borrower Created succesfuly';
+  } catch (PDOException $e) {
+    throw $e;
+    $borrower_create_status = 'unsuccessful';
+    $borrower_create_message = $e->getMessage();
   }
 
 
@@ -39,7 +65,6 @@ if (isset($_POST['add_browser'])) {
 ?>
 
 <!doctype html>
-< lang="en">
 
 <head>
   <meta charset="utf-8" />
@@ -200,11 +225,14 @@ if (isset($_POST['add_browser'])) {
                   <label class="form-label">Borrower</label>
                   <select class="form-select" name="borrower_id" required>
                     <option value="">Select borrower</option>
-                    <option value="1">Juan Dela Cruz</option>
-                    <option value="2">Maria Santos</option>
-                    <option value="3">Mark Reyes</option>
-                    <option value="4">Ana Bautista</option>
-                    <option value="6">Grace Mendoza</option>
+                    <?php 
+                    
+                      $allborrowers = $con->viewborrowers();
+                      foreach($allborrowers as $borrower){
+                        echo '<option value="'.$borrower['borrower_id'].'">'.'['.''.$borrower['borrower_id'].''.']'.''.$borrower['borrower_firstname'].' '.$borrower['borrower_lastname'].'</option>';
+                      } 
+                    
+                    ?>
                   </select>
                 </div>
                 <div class="col-6">
@@ -239,7 +267,7 @@ if (isset($_POST['add_browser'])) {
                   </select>
                 </div>
                 <div class="col-12">
-                  <button class="btn btn-outline-primary w-100" type="submit">Add Address</button>
+                  <button name="add_address" class="btn btn-outline-primary w-100" type="submit">Add Address</button>
                 </div>
               </form>
             </div>
@@ -292,14 +320,14 @@ const createMessage = <?php echo json_encode($borrower_create_message) ?>;
 if (createStatus == "success") {
   Swal.fire({
     icon: "success",
-    title: "Account Creation...",
+    title: "Succesful Account Creation...",
     text: createMessage,
     footer: "<a href=\"#\"></a>"
   });
 }else if (createStatus == "unsuccessful"){
   Swal.fire({
     icon: "error",
-    title: "Account Creation...",
+    title: "Error Account Creation...",
     text: createMessage,
     footer: "<a href=\"#\"></a>"
   });

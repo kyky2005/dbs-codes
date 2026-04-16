@@ -1,12 +1,66 @@
+<?php
+
+require_once('../classes/database.php');
+$con = new database();
+
+$data = $con->opencon();
+
+$books_create_status = null;
+$books_create_message = '';
+
+if (isset($_POST['add_book'])) {
+
+  try {
+    $book_title = $_POST['book_title'];
+    $book_isbn = $_POST['book_isbn'];
+    $book_publication_year = $_POST['book_publication_year'];
+    $book_edition = $_POST['book_edition'];
+    $book_publisher = $_POST['book_publisher'];
+
+    $book_id = $con->insertBooks($book_title, $book_isbn, $book_publication_year, $book_edition, $book_publisher);
+
+    $book_create_status = 'success';
+    $book_create_message = 'Borrower Created succesfuly';
+  } catch (PDOException $e) { 
+    throw $e;
+    $book_create_status = 'unsuccessful';
+    $book_create_message = $e->getMessage();
+  }
+
+
+}
+
+if (isset($_POST['add_copy'])) {
+
+  try {
+    $book_id = $_POST['book_id'];
+    $book_status = $_POST['status'];
+    
+
+    $book_id = $con->insertBookCopy($book_id, $book_status);
+
+    $book_create_status = 'success';
+    $book_create_message = 'Borrower Created succesfuly';
+  } catch (PDOException $e) { 
+    throw $e;
+    $book_create_status = 'unsuccessful';
+    $book_create_message = $e->getMessage();
+  }
+
+
+}
+
+?>
+
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Books — Admin</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../bootstrap-5.3.3-dist/css/bootstrap.css">s
+  <link rel="stylesheet" href="../bootstrap-5.3.3-dist/css/bootstrap.css">
+  <link rel="stylesheet" href="../sweetalert/dist/sweetalert2.min.css">
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
@@ -61,7 +115,7 @@
             <label class="form-label">Publisher</label>
             <input class="form-control" name="book_publisher" placeholder="optional">
           </div>
-          <button class="btn btn-primary w-100" type="submit">Save Book</button>
+          <button name="add_book" class="btn btn-primary w-100" type="submit">Save Book</button>
         </form>
       </div>
 
@@ -74,11 +128,14 @@
             <label class="form-label">Book</label>
             <select class="form-select" name="book_id" required>
               <option value="">Select book</option>
-              <option value="1">Noli Me Tangere</option>
-              <option value="2">El Filibusterismo</option>
-              <option value="3">Mga Ibong Mandaragit</option>
-              <option value="4">Smaller and Smaller Circles</option>
-              <option value="5">Dekada ’70</option>
+              <?php 
+                    
+                      $allbooks = $con->viewbooks();
+                      foreach($allbooks as $books){
+                       echo '<option value="'.$books['book_id'].'">'.'['.''.$books['book_id'].''.']'.''.$books['book_title'].'</option>';
+                      } 
+                    
+                    ?>
             </select>
           </div>
           <div class="mb-3">
@@ -91,7 +148,7 @@
               <option value="REPAIR">REPAIR</option>
             </select>
           </div>
-          <button class="btn btn-outline-primary w-100" type="submit">Add Copy</button>
+          <button name="add_copy"class="btn btn-outline-primary w-100" type="submit">Add Copy</button>
         </form>
       </div>
     </div>
@@ -249,7 +306,29 @@
     </div>
   </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../bootstrap-5.3.3-dist/js/bootstrap.js"></script>
+  <script src="../sweetalert/dist/sweetalert2.min.js"></script>
+  
 </body>
+<script>
+
+const createStatus = <?php echo json_encode($book_create_status) ?>;
+const createMessage = <?php echo json_encode($book_create_message) ?>;
+
+if (createStatus == "success") {
+  Swal.fire({
+    icon: "success",
+    title: "Succesful Account Creation...",
+    text: createMessage,
+    footer: "<a href=\"#\"></a>"
+  });
+}else if (createStatus == "unsuccessful"){
+  Swal.fire({
+    icon: "error",
+    title: "Error Account Creation...",
+    text: createMessage,
+    footer: "<a href=\"#\"></a>"
+  });
+}
+</script>
 </html>
